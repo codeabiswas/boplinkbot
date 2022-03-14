@@ -7,6 +7,8 @@ from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, InlineQueryHandler
 from urllib.parse import urlparse
 
+# For the Bot Profile picture, attribution: Sound icons created by Freepik - Flaticon
+
 # The Updater class continuously fetches new updates from Telegram and passes them on to the Dispatcher class. Creating an Updater object creates a Dispatcher object and links the Dispatcher object to a queue.
 # Different handlers can be registered with the Dispatcher object. The Dispatcher object will sort the updates fetched by Updater and accordingly send them to the callback functions defined.
 
@@ -44,11 +46,39 @@ def inline_query(update: Update, context: CallbackContext):
     if not validators.url(query):
         print("Not a valid URL: {}".format(query))
         return
+
+    # See if this is a supported streaming service link
+    supported_streaming_services = [
+                'music.apple.com',
+                'open.spotify.com',
+                'www.youtube.com',
+                'music.youtube.com',
+                'www.pandora.com',
+                'www.deezer.com',
+                'soundcloud.com',
+                'music.amazon.com',
+                'listen.tidal.com',
+                'napster.com',
+                'music.yandex.ru',
+                'spinrilla.com',
+                'audius.co',
+                'audiomack.com'
+            ]
+
+    # User supplied URL's hostname
+    user_url_hostname = urlparse(query).hostname
+    print(user_url_hostname)
+    # Check list of streaming services against this. If it does not match, return.
+    if user_url_hostname not in supported_streaming_services:
+        print("Not a supported streaming service link.")
+        return
+    
     
     # Get all the links given the user URL
     all_links_dict = all_links_conversion(query)
     # If dictionary is empty, that means an error was hit. No results should be sent back to the end user.
     if not all_links_dict:
+        print('No results.')
         return
 
     # List of result to show inline
