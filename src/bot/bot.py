@@ -1,15 +1,21 @@
 import logging
-from cli.cli import help
+import os
+import configparser
+import validators
+from cli.cli import all_links_conversion
 from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, InlineQueryHandler
+from urllib.parse import urlparse
 
 # The Updater class continuously fetches new updates from Telegram and passes them on to the Dispatcher class. Creating an Updater object creates a Dispatcher object and links the Dispatcher object to a queue.
 # Different handlers can be registered with the Dispatcher object. The Dispatcher object will sort the updates fetched by Updater and accordingly send them to the callback functions defined.
 
-API_KEY = '5121780857:AAHeKLI0Fws_Ajzy-fphB3sgUbFEVOH5Yo8'
+config = configparser.ConfigParser()
+config.read('.env')
+boplinkbot_token = config['TELEGRAM_BOPLINKBOT_TOKEN']['TOKEN']
 
 # Create an Updater object
-updater = Updater(token=API_KEY, use_context=True)
+updater = Updater(token=boplinkbot_token, use_context=True)
 
 # Fetch Dispatcher object
 dispatcher = updater.dispatcher
@@ -28,33 +34,43 @@ def unknown(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id, text=bot_response_text)
 
 # Function for responding to inline queries
-# TODO: Use for sending bop links
 def inline_query(update: Update, context: CallbackContext):
+
 
     query = update.inline_query.query
     print(query)
-    help()
 
-    # No query
-    if not query:
+    # No valid input 
+    if not validators.url(query):
+        print("Not a valid URL: {}".format(query))
+        return
+    
+    # Get all the links given the user URL
+    all_links_dict = all_links_conversion(query)
+    # If dictionary is empty, that means an error was hit. No results should be sent back to the end user.
+    if not all_links_dict:
         return
 
     # List of result to show inline
     results = list()
     
-    # Do this 3 times
-    for i in range(3):
-        # Generate a bot response to be added to the Inline query's result
-        bot_response_text = InputTextMessageContent(query.upper())
-        # Create an Inline result object
-        inline_result = InlineQueryResultArticle(
-                    id=i,
-                    title="Bop {num}".format(num=i+1),
-                    input_message_content=bot_response_text
-                )
+    # Iterate through the dictionary
+    for index, key in enumerate(all_links_dict):
+        # If no link was found for this particular streaming service
+        if all_links_dict[key] == None:
+            pass
+        else:
+            # Generate a bot response as the URL to be added to the Inline query's result
+            inline_response_text = InputTextMessageContent(all_links_dict[key])
+            # Create an Inline result object
+            inline_result = InlineQueryResultArticle(
+                        id=index,
+                        title=key.title(),
+                        input_message_content=inline_response_text
+                    )
 
-        # Append this result to the results list
-        results.append(inline_result)
+            # Append this result to the results list
+            results.append(inline_result)
 
     # Respond inline query with the results list
     context.bot.answer_inline_query(update.inline_query.id, results)

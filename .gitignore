@@ -1,2 +1,5 @@
-# Python Virtual Environment Files
+# Secret Environment files
+src/bot/.env
+
+# Python virtual environment files
 env/
