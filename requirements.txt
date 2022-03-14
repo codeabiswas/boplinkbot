@@ -4,6 +4,7 @@ beautifulsoup4==4.10.0
 cachetools==4.2.2
 certifi==2021.10.8
 charset-normalizer==2.0.12
+decorator==5.1.1
 idna==3.3
 python-telegram-bot==13.11
 pytz==2021.3
@@ -15,3 +16,4 @@ tornado==6.1
 tzdata==2021.5
 tzlocal==4.1
 urllib3==1.26.8
+validators==0.18.2
